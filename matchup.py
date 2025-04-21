@@ -168,13 +168,15 @@ def display(unit_1: Unit, unit_2: Unit, age: int):
     cost_ratio = c1 / c2
     print(f"cost for {unit_1.name} : {c1}")
     print(f"cost for {unit_2.name} : {c2}")
+    print(f"cost ratio : {cost_ratio}")
     ax.step(timestamps, unit_1_health_list, "-", where="post")
     ax.step(timestamps, unit_2_health_list, "-", where="post")
     ax.set_xlabel("time (s)")
     ax.set_ylabel("health")
     ax.set_title(f"Unit trade at age {age}")
     ax.legend([unit_1.name, unit_2.name])
-    return cost_ratio
+    mpl.show()
+    return fig
 
 
 def coef(unit_1: Unit, unit_2: Unit):
