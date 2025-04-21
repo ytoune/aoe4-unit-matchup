@@ -49,3 +49,7 @@ All the vanilla upgrades are taken in acocunt. Attack speed, damage, armor, heal
 # What is not taken in account
 
 The starting range of the fight, the range/movespeed of the units, and the civilisation-specific upgrades. The upgrades are not hard to add at all, but require a bit of time to do it for all civs. Feel free to manually edit the `create_csv.py` file, or the `.csv` files (very easy to understand, it's basically a summary of each unit stats).
+
+
+# Data source / Update the unit list
+The data I use is from the **AoE4 World Data**, which today is actively updated. Just replace the ´all-unified.json´ file to update the unit list. The data can be found here : https://data.aoe4world.com/
