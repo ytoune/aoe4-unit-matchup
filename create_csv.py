@@ -90,6 +90,8 @@ def generate_csv(civ: str, age: str) -> str:
                 "hp",
                 "melee_damage",
                 "range_damage",
+                "weapon_range",
+                "speed",
                 "attack_speed",
                 "melee_armor",
                 "range_armor",
@@ -112,13 +114,12 @@ def generate_csv(civ: str, age: str) -> str:
             name = unit.get("name", "")
             for unit in unit["variations"]:
                 if not (
-                    civ in unit["civs"]
-                    and age == unit["age"]
-                    and name in unit_names
+                    civ in unit["civs"] and age == unit["age"] and name in unit_names
                 ):
                     continue
 
                 hp = unit.get("hitpoints", 0)
+                speed = unit["movement"]["speed"]
 
                 # weapon stuff
                 weapon = unit["weapons"][0]
@@ -130,13 +131,13 @@ def generate_csv(civ: str, age: str) -> str:
                     range_damage = weapon.get("damage", "")
                 else:
                     print(f"issue with damage for {name}")
+                weapon_range = weapon.get("range", {"max":0})["max"]
                 attack_speed = weapon.get("speed", "")
                 damage_bonus = []
                 damage_bonus_type = []
                 for bonus in weapon["modifiers"]:
                     damage_bonus.append(bonus.get("value", ""))
-                    damage_bonus_type.append(
-                        bonus["target"].get("class", [""])[0])
+                    damage_bonus_type.append(bonus["target"].get("class", [""])[0])
                 if "burst" in weapon.keys():
                     number_of_attacks = weapon["burst"].get("count", "")
                 else:
@@ -187,6 +188,8 @@ def generate_csv(civ: str, age: str) -> str:
                         hp,
                         melee_damage,
                         range_damage,
+                        weapon_range,
+                        speed,
                         attack_speed,
                         melee_armor,
                         range_armor,
