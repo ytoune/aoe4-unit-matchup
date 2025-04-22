@@ -15,6 +15,8 @@ class Unit:
         name: str = "",
         melee_damage: float = 0,
         range_damage: float = 0,
+        weapon_range: float = 0,
+        speed: float = 0,
         attack_speed: float = 1.375,
         melee_armor: float = 0,
         range_armor: float = 0,
@@ -30,7 +32,7 @@ class Unit:
         range_mult_bonus: float = 1,
         hp_mult: float = 1,
         true_damage: float = 0,
-        number_of_attacks: int = 1
+        number_of_attacks: int = 1,
     ):
         if unit_type is None:
             unit_type = []
@@ -44,9 +46,11 @@ class Unit:
         self.name = name
 
         # damage
-        self.attack_speed = attack_speed
         self.melee_damage = melee_damage
         self.range_damage = range_damage
+        self.weapon_range = weapon_range
+        self.speed = speed
+        self.attack_speed = attack_speed
         self.melee_attack_upgrade = melee_attack_upgrade
         self.range_attack_upgrade = range_attack_upgrade
         self.damage_bonus_type = damage_bonus_type
@@ -83,11 +87,24 @@ def load_units(filename: str = "units.csv") -> dict:
                     parsed_row[key] = ast.literal_eval(value)
 
                 elif key in {
-                    "hp", "melee_damage", "range_damage", "attack_speed",
-                    "melee_armor", "range_armor", "cost",
-                    "melee_attack_upgrade", "range_attack_upgrade",
-                    "melee_def_upgrade", "range_def_upgrade",
-                    "melee_mult_bonus", "range_mult_bonus", "hp_mult", "true_damage", "number_of_attacks"
+                    "hp",
+                    "melee_damage",
+                    "range_damage",
+                    "weapon_range",
+                    "speed",
+                    "attack_speed",
+                    "melee_armor",
+                    "range_armor",
+                    "cost",
+                    "melee_attack_upgrade",
+                    "range_attack_upgrade",
+                    "melee_def_upgrade",
+                    "range_def_upgrade",
+                    "melee_mult_bonus",
+                    "range_mult_bonus",
+                    "hp_mult",
+                    "true_damage",
+                    "number_of_attacks",
                 }:
                     parsed_row[key] = float(value)
                 else:
@@ -120,35 +137,75 @@ def compute_damage(unit_1: Unit, unit_2: Unit) -> float:
         ) * unit_1.range_mult_bonus
         armor = unit_2.range_armor + unit_2.range_def_upgrade
 
-    return (max(damage - armor, 1) + unit_1.true_damage)*unit_1.number_of_attacks
+    return (max(damage - armor, 1) + unit_1.true_damage) * unit_1.number_of_attacks
 
 
-def trade(unit_1: Unit, unit_2: Unit):
-    unit_1_health_list = [unit_1.hp]
-    unit_1_next_attack_time = unit_1.attack_speed
-    unit_2_next_attack_time = unit_2.attack_speed
-    unit_2_health_list = [unit_2.hp]
-    timestamps = [0]
+def trade(unit_1: Unit, unit_2: Unit) -> (list, list, list):
+
+    def _get_last_samuraied(shooter: Unit, target: Unit) -> (list, list, float):
+        """
+        simulates a shooting gallery.
+        The outranging unit will attack the running unit until that latter one would catch up before the next shot.
+
+        if the range diff is already 'smaller than' the attack speed it default to computing a time offset of the last striker
+        (looking at you, Sipahi! always striking first!)
+
+        """
+        timestamps = [0]
+        no_kiting_speed = target.speed
+        shoot_time = shooter.attack_speed
+        target_health_list = [max(target.hp - compute_damage(shooter, target), 0)]
+
+        distance = shooter.weapon_range - target.weapon_range
+
+        # only one unit strikes the other
+        while distance > no_kiting_speed*shoot_time:
+            target_health_list.append(
+                max(target_health_list[-1] - compute_damage(shooter, target), 0)
+            )
+            timestamps.append(timestamps[-1]+shoot_time)
+            distance -= no_kiting_speed*shoot_time
+        return target_health_list, timestamps, distance/no_kiting_speed
+
+    if unit_1.weapon_range > unit_2.weapon_range:
+        unit_2_health_list, timestamps, unit_2_next_attack_time  = _get_last_samuraied(unit_1, unit_2)
+        unit_1_health_list = [unit_1.hp] * len(timestamps)
+        unit_1_next_attack_time = unit_1.attack_speed
+    elif unit_1.weapon_range < unit_2.weapon_range:
+        unit_1_health_list, timestamps, unit_1_next_attack_time = _get_last_samuraied(unit_2, unit_1)
+        unit_2_health_list = [unit_2.hp] * len(timestamps)
+        unit_2_next_attack_time = unit_2.attack_speed
+    else:
+        unit_1_health_list = [unit_1.hp]
+        unit_2_health_list = [unit_2.hp]
+        timestamps = [0]
+        unit_1_next_attack_time = unit_1.attack_speed
+        unit_2_next_attack_time = unit_2.attack_speed
+
     while unit_1_health_list[-1] > 0 and unit_2_health_list[-1] > 0:
         dt = min(unit_1_next_attack_time, unit_2_next_attack_time)
         timestamps.append(timestamps[-1] + dt)
         if unit_1_next_attack_time < unit_2_next_attack_time:
             unit_2_health_list.append(
-                max(unit_2_health_list[-1] - compute_damage(unit_1, unit_2), 0))
+                max(unit_2_health_list[-1] - compute_damage(unit_1, unit_2), 0)
+            )
             unit_1_health_list.append(unit_1_health_list[-1])
             unit_2_next_attack_time -= unit_1_next_attack_time
             unit_1_next_attack_time = unit_1.attack_speed
         elif unit_1_next_attack_time == unit_2_next_attack_time:
             unit_1_health_list.append(
-                max(unit_1_health_list[-1] - compute_damage(unit_2, unit_1), 0))
+                max(unit_1_health_list[-1] - compute_damage(unit_2, unit_1), 0)
+            )
             unit_2_health_list.append(
-                max(unit_2_health_list[-1] - compute_damage(unit_1, unit_2), 0))
+                max(unit_2_health_list[-1] - compute_damage(unit_1, unit_2), 0)
+            )
             unit_2_next_attack_time = unit_2.attack_speed
             unit_1_next_attack_time = unit_1.attack_speed
 
         else:
             unit_1_health_list.append(
-                max(unit_1_health_list[-1] - compute_damage(unit_2, unit_1), 0))
+                max(unit_1_health_list[-1] - compute_damage(unit_2, unit_1), 0)
+            )
             unit_2_health_list.append(unit_2_health_list[-1])
             unit_1_next_attack_time -= unit_2_next_attack_time
             unit_2_next_attack_time = unit_2.attack_speed
@@ -159,11 +216,9 @@ def display(unit_1: Unit, unit_2: Unit, age: int):
     unit_1_health_list, unit_2_health_list, timestamps = trade(unit_1, unit_2)
     fig = mpl.figure()
     ax = fig.add_subplot(111)
-    hpdiff1 = (unit_1_health_list[0] -
-               unit_1_health_list[-1]) / unit_1_health_list[0]
+    hpdiff1 = (unit_1_health_list[0] - unit_1_health_list[-1]) / unit_1_health_list[0]
     c1 = unit_1.cost * hpdiff1
-    hpdiff2 = (unit_2_health_list[0] -
-               unit_2_health_list[-1]) / unit_2_health_list[0]
+    hpdiff2 = (unit_2_health_list[0] - unit_2_health_list[-1]) / unit_2_health_list[0]
     c2 = unit_2.cost * hpdiff2
     cost_ratio = c1 / c2
     print(f"cost for {unit_1.name} : {c1}")
@@ -181,11 +236,9 @@ def display(unit_1: Unit, unit_2: Unit, age: int):
 
 def coef(unit_1: Unit, unit_2: Unit):
     unit_1_health_list, unit_2_health_list, timestamps = trade(unit_1, unit_2)
-    hpdiff1 = (unit_1_health_list[0] -
-               unit_1_health_list[-1]) / unit_1_health_list[0]
+    hpdiff1 = (unit_1_health_list[0] - unit_1_health_list[-1]) / unit_1_health_list[0]
     c1 = unit_1.cost * hpdiff1
-    hpdiff2 = (unit_2_health_list[0] -
-               unit_2_health_list[-1]) / unit_2_health_list[0]
+    hpdiff2 = (unit_2_health_list[0] - unit_2_health_list[-1]) / unit_2_health_list[0]
     c2 = unit_2.cost * hpdiff2
     cost_ratio = c1 / c2
     return cost_ratio
@@ -193,14 +246,9 @@ def coef(unit_1: Unit, unit_2: Unit):
 
 def generate_html(civ_1: dict, civ_2: dict, output_file="ouput.html"):
     df = pd.DataFrame(
-        {col: {row: coef(civ_1[row], civ_2[col])
-               for row in civ_1} for col in civ_2}
+        {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
     )
     norm = TwoSlopeNorm(vmin=df.min().min(), vcenter=1.0, vmax=df.max().max())
-    gmap = df.applymap(norm)
-    styled_df = df.style.background_gradient(
-        cmap='RdYlGn_r',
-        axis=None,
-        gmap=gmap
-    )
+    gmap = df.map(norm)
+    styled_df = df.style.background_gradient(cmap="RdYlGn_r", axis=None, gmap=gmap)
     styled_df.to_html(output_file)
