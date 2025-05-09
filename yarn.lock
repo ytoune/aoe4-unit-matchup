@@ -963,6 +963,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/chroma-js@npm:^3":
+  version: 3.1.1
+  resolution: "@types/chroma-js@npm:3.1.1"
+  checksum: 10c0/2b2d2eb44fd6e7103696c890c04a84c55441e9fea2f3913949bb377ec7249fe8a95e8117108b6e837422dbb23dee8180ad6907a29a8ae6d9443e7423cd0b2f6a
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:1.0.7, @types/estree@npm:^1.0.0, @types/estree@npm:^1.0.6":
   version: 1.0.7
   resolution: "@types/estree@npm:1.0.7"
@@ -1406,11 +1413,13 @@ __metadata:
     "@eslint/eslintrc": "npm:3.3.1"
     "@eslint/js": "npm:9.26.0"
     "@preact/preset-vite": "npm:2.10.1"
+    "@types/chroma-js": "npm:^3"
     "@types/gh-pages": "npm:^6"
     "@types/node": "npm:22.15.17"
     "@typescript-eslint/eslint-plugin": "npm:8.32.0"
     "@typescript-eslint/parser": "npm:8.32.0"
     aoe4data: "git+https://github.com/aoe4world/data.git#main"
+    chroma-js: "npm:3.1.2"
     esbuild: "npm:0.25.4"
     esbuild-register: "npm:3.6.0"
     eslint: "npm:9.26.0"
@@ -1783,6 +1792,13 @@ __metadata:
   version: 3.0.0
   resolution: "chownr@npm:3.0.0"
   checksum: 10c0/43925b87700f7e3893296c8e9c56cc58f926411cce3a6e5898136daaf08f08b9a8eb76d37d3267e707d0dcc17aed2e2ebdf5848c0c3ce95cf910a919935c1b10
+  languageName: node
+  linkType: hard
+
+"chroma-js@npm:3.1.2":
+  version: 3.1.2
+  resolution: "chroma-js@npm:3.1.2"
+  checksum: 10c0/145ce9aea91dac81c6158082675084778e8c83e6959032e37fd4ba9b01db9f5c29c520453ec4bab7e87689f12756fcc63821e3c6b866e083ea41d341c7b2bf71
   languageName: node
   linkType: hard
 

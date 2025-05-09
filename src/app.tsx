@@ -3,6 +3,7 @@ import { useCivs, civsMap, civIds, useAges } from './civs'
 import type { UnitData } from './data'
 import { createLines, unitNames } from './create-lines'
 import { coef, trade } from './matchup'
+import chroma from 'chroma-js'
 
 type Mode = 'graph' | 'table'
 const modes = ['table', 'graph'] as const satisfies Mode[]
@@ -261,6 +262,31 @@ const Table = ({
   const list1 = makeList(data, civ1, age)
   const list2 = makeList(data, civ2, age)
   // @todo add background color
+  // chroma.brewer.RdYlGn
+  const scale = useMemo(() => chroma.scale('RdYlGn'), [])
+  let min = 1 / 0
+  let max = -1 / 0
+  const values = list1.map(u1 => ({
+    u1,
+    cols: list2.map(u2 => {
+      const v = coef(u1, u2)
+      if (min > v) min = v
+      if (max < v) max = v
+      return { u2, v }
+    }),
+  }))
+  const color = (v: number) => {
+    if (min <= v && v <= max) {
+      const s =
+        v < 1 ? (v - min) / (1 - min) / 2 : 0.5 + (v - 1) / (max - 1) / 2
+      const r = scale(1 - s)
+      const l = r.oklch()[0]
+      return {
+        backgroundColor: r.css(),
+        color: l < 0.7 ? 'white' : 'black',
+      }
+    }
+  }
   return (
     <table>
       <tbody>
@@ -270,14 +296,17 @@ const Table = ({
             <th key={`head:${u.id}`}>{displayUnitName(u.id)}</th>
           ))}
         </tr>
-        {list1.map(u1 => {
+        {values.map(({ u1, cols }) => {
           return (
             <tr key={`${u1.id}/head`}>
               <th>{displayUnitName(u1.id)}</th>
-              {list2.map(u2 => {
+              {cols.map(({ u2, v }) => {
                 //  {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
+                const c = color(v)
                 return (
-                  <td key={`${u1.id}/${u2.id}`}>{coef(u1, u2).toFixed(6)}</td>
+                  <td key={`${u1.id}/${u2.id}`} style={c}>
+                    {coef(u1, u2).toFixed(6)}
+                  </td>
                 )
               })}
             </tr>
