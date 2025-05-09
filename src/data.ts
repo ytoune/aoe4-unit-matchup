@@ -12,7 +12,7 @@ export type UnitVariation = ty.Unit & {
   }
 }
 
-type Out = (typeof import('./all-unified.json'))['data'][number] //['type']
+// type Out = (typeof import('./all-unified.json'))['data'][number] //['type']
 
 export const getData = async (): Promise<readonly UnitData[]> =>
   await import('./all-unified.json')
