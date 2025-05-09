@@ -1,5 +1,3 @@
-import { make } from './options'
-
 export const list = [
   {
     id: 'ab',
@@ -97,6 +95,3 @@ export const list = [
 
 export const civIds = list.map(i => i.id)
 export const civsMap = Object.fromEntries(list.map(c => [c.id, c]))
-
-export const useCivs = make(['hr', civIds])
-export const useAges = make(['2', ['1', '2', '3', '4']])
