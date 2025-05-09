@@ -146,7 +146,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           d.variations.find(
             v => v.name === d.name && v.locale?.[locale]?.name,
           ) || d.variations.find(v => v.locale?.[locale]?.name)
-        return [d.id, v?.locale?.ja?.name || d.name]
+        return [d.id, v?.locale?.[locale]?.name || d.name]
       }),
     )
     return (id: string) => map[id] ?? '?'
