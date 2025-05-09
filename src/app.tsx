@@ -20,6 +20,7 @@ const locales = ['en', 'ja'] as const satisfies Locale[]
 const parseHash = () => {
   const m = location.hash.match(/#\[([^\]]+)\]/)
   const r: Partial<HashState> = {}
+  if (!location.hash) r.m = 'summary'
   if (m) {
     for (const t of m[1]!.split(',')) {
       const m = t.match(/^(c1|c2|m|a|u1|u2)=(.*)$/)
