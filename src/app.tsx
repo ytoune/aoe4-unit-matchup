@@ -5,8 +5,8 @@ import { createLines, unitNames } from './create-lines'
 import { coef, trade } from './matchup'
 import chroma from 'chroma-js'
 
-type Mode = 'graph' | 'table'
-const modes = ['table', 'graph'] as const satisfies Mode[]
+type Mode = '1v1' | 'summary'
+const modes = ['summary', '1v1'] as const satisfies Mode[]
 
 type Age = '1' | '2' | '3' | '4'
 const ages = ['1', '2', '3', '4'] as const satisfies Age[]
@@ -24,7 +24,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
   const [civ1, setCiv1] = useCivs()
   const [civ2, setCiv2] = useCivs()
   const [age, setAge] = useAges()
-  const [mode, setMode] = useState<Mode>('table')
+  const [mode, setMode] = useState<Mode>('summary')
   const unitIds1 = useMemo(
     () =>
       data
@@ -109,7 +109,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           values={modes}
           set={c => setMode(c)}
         />
-        {mode !== 'graph' ? null : (
+        {mode !== '1v1' ? null : (
           <>
             <SelectorToolForSet<string>
               title="unit1"
@@ -128,7 +128,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           </>
         )}
       </dl>
-      {mode === 'graph' ? (
+      {mode === '1v1' ? (
         <Graph
           civ1={civ1}
           civ2={civ2}
