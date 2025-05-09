@@ -24,7 +24,28 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
   const [civ2, setCiv2] = useCivs()
   const [age, setAge] = useAges()
   const [mode, setMode] = useState<Mode>('table')
-  const unitIds = useMemo(() => data.map(d => d.id), [data])
+  const unitIds1 = useMemo(
+    () =>
+      data
+        .filter(
+          d =>
+            d.variations.some(v => `${v.age}` === age) &&
+            d.civs.some(c => c === civ1),
+        )
+        .map(d => d.id),
+    [data, civ1],
+  )
+  const unitIds2 = useMemo(
+    () =>
+      data
+        .filter(
+          d =>
+            d.variations.some(v => `${v.age}` === age) &&
+            d.civs.some(c => c === civ2),
+        )
+        .map(d => d.id),
+    [data, civ2],
+  )
   const unitMap = useMemo(
     () => Object.fromEntries(data.map(d => [d.id, d])),
     [data],
@@ -41,8 +62,10 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
     )
     return (id: string) => map[id] ?? '?'
   }, [data, locale])
-  const [u1id, setU1id] = useState<string>('archer')
-  const [u2id, setU2id] = useState<string>('archer')
+  const [u1id0, setU1id] = useState<string>('archer')
+  const [u2id0, setU2id] = useState<string>('archer')
+  const u1id = (unitIds1.includes(u1id0) ? u1id0 : unitIds1[0]) || 'archer'
+  const u2id = (unitIds2.includes(u2id0) ? u2id0 : unitIds2[0]) || 'archer'
   const unitsForTable = useMemo(
     () =>
       unitNames
@@ -88,16 +111,16 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
         {mode !== 'graph' ? null : (
           <>
             <SelectorToolForSet<string>
-              title="mode"
+              title="unit1"
               value={u1id}
-              values={unitIds}
+              values={unitIds1}
               set={c => setU1id(c)}
               name={displayUnitName}
             />
             <SelectorToolForSet<string>
-              title="mode"
+              title="unit2"
               value={u2id}
-              values={unitIds}
+              values={unitIds2}
               set={c => setU2id(c)}
               name={displayUnitName}
             />
@@ -200,9 +223,9 @@ const Graph = ({
         {Array.from({ length }, (_, i) => {
           const u1health = u1healthList[i]!
           const u2health = u2healthList[i]!
-          const ts = timestamps[i]!
+          const ts = timestamps[i]!.toFixed(3)
           return (
-            <tr key={ts}>
+            <tr key={`${i}`}>
               <td>{ts}</td>
               <td>{u1health}</td>
               <td>{u2health}</td>
