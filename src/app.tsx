@@ -1,0 +1,266 @@
+import { useMemo, useState } from 'preact/hooks'
+import { useCivs, civsMap, civIds, useAges } from './civs'
+import type { UnitData } from './data'
+import { createLines, unitNames } from './create-lines'
+import { coef, trade } from './matchup'
+
+type Mode = 'graph' | 'table'
+const modes = ['table', 'graph'] as const satisfies Mode[]
+
+type Age = '1' | '2' | '3' | '4'
+const ages = ['1', '2', '3', '4'] as const satisfies Age[]
+
+type CivId = (typeof civIds)[number]
+const displayCivName = (v: (typeof civIds)[number]) => civsMap[v]?.name
+
+type Locale = 'en' | 'ja'
+const locales = ['en', 'ja'] as const satisfies Locale[]
+
+export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
+  const [locale, setLocale] = useState<Locale>(
+    (navigator.languages as Locale[]).find(l => locales.includes(l)) ?? 'ja',
+  )
+  const [civ1, setCiv1] = useCivs()
+  const [civ2, setCiv2] = useCivs()
+  const [age, setAge] = useAges()
+  const [mode, setMode] = useState<Mode>('table')
+  const unitIds = useMemo(() => data.map(d => d.id), [data])
+  const unitMap = useMemo(
+    () => Object.fromEntries(data.map(d => [d.id, d])),
+    [data],
+  )
+  const displayUnitName = useMemo(() => {
+    const map = Object.fromEntries(
+      data.map(d => {
+        const v =
+          d.variations.find(
+            v => v.name === d.name && v.locale?.[locale]?.name,
+          ) || d.variations.find(v => v.locale?.[locale]?.name)
+        return [d.id, v?.locale?.ja?.name || d.name]
+      }),
+    )
+    return (id: string) => map[id] ?? '?'
+  }, [data, locale])
+  const [u1id, setU1id] = useState<string>('archer')
+  const [u2id, setU2id] = useState<string>('archer')
+  const unitsForTable = useMemo(
+    () =>
+      unitNames
+        .map(name => data.find(d => d.name === name))
+        .filter(<T,>(d: T | undefined): d is T => !!d),
+    [data, unitNames],
+  )
+  return (
+    <div>
+      <dl class="tools">
+        <SelectorToolForSet<Locale>
+          title="language"
+          value={locale}
+          values={locales}
+          set={c => setLocale(c)}
+        />
+        <SelectorToolForSet<CivId>
+          title="civ1"
+          value={civ1}
+          values={civIds}
+          set={c => setCiv1({ key: c })}
+          name={displayCivName}
+        />
+        <SelectorToolForSet<CivId>
+          title="civ2"
+          value={civ2}
+          values={civIds}
+          set={c => setCiv2({ key: c })}
+          name={displayCivName}
+        />
+        <SelectorToolForSet<Age>
+          title="age"
+          value={age}
+          values={ages}
+          set={c => setAge({ key: c })}
+        />
+        <SelectorToolForSet<Mode>
+          title="mode"
+          value={mode}
+          values={modes}
+          set={c => setMode(c)}
+        />
+        {mode !== 'graph' ? null : (
+          <>
+            <SelectorToolForSet<string>
+              title="mode"
+              value={u1id}
+              values={unitIds}
+              set={c => setU1id(c)}
+              name={displayUnitName}
+            />
+            <SelectorToolForSet<string>
+              title="mode"
+              value={u2id}
+              values={unitIds}
+              set={c => setU2id(c)}
+              name={displayUnitName}
+            />
+          </>
+        )}
+      </dl>
+      {mode === 'graph' ? (
+        <Graph
+          civ1={civ1}
+          civ2={civ2}
+          age={age}
+          u1={unitMap[u1id]}
+          u2={unitMap[u2id]}
+        />
+      ) : (
+        <Table
+          data={unitsForTable}
+          civ1={civ1}
+          civ2={civ2}
+          age={age}
+          displayUnitName={displayUnitName}
+        />
+      )}
+    </div>
+  )
+}
+
+const SelectorToolForSet = <T extends string>({
+  title,
+  value,
+  values,
+  set,
+  name,
+}: {
+  title: string
+  value: T
+  values: readonly T[]
+  set: (v: T) => void
+  name?: (v: T) => string | undefined
+}) => {
+  return (
+    <label>
+      <dt>{title}</dt>
+      <dd>
+        <select
+          value={value}
+          onChange={e =>
+            set((e as unknown as { target: { value: T } }).target.value)
+          }
+        >
+          {values.map(v => (
+            <option key={v} value={v}>
+              {name?.(v) ?? v}
+            </option>
+          ))}
+        </select>
+      </dd>
+    </label>
+  )
+}
+
+const Graph = ({
+  civ1,
+  civ2,
+  age,
+  u1: ud1,
+  u2: ud2,
+}: {
+  civ1: CivId
+  civ2: CivId
+  age: Age
+  u1?: UnitData
+  u2?: UnitData
+}) => {
+  if (!ud1 || !ud2) return null
+  // @todo use echarts
+  const u1 = Array.from(createLines(ud1)).find(
+    u => `${u.age}` === age && u.civs.includes(civ1),
+  )
+  const u2 = Array.from(createLines(ud2)).find(
+    u => `${u.age}` === age && u.civs.includes(civ2),
+  )
+  if (!u1 || !u2) return null
+  const [u1healthList, u2healthList, timestamps] = trade(u1, u2)
+  const length = Math.min(
+    u1healthList.length,
+    u2healthList.length,
+    timestamps.length,
+  )
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>timestamp</th>
+          <th>unit1hp</th>
+          <th>unit2hp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from({ length }, (_, i) => {
+          const u1health = u1healthList[i]!
+          const u2health = u2healthList[i]!
+          const ts = timestamps[i]!
+          return (
+            <tr key={ts}>
+              <td>{ts}</td>
+              <td>{u1health}</td>
+              <td>{u2health}</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+const Table = ({
+  data,
+  civ1,
+  civ2,
+  age,
+  displayUnitName,
+}: {
+  data: readonly UnitData[]
+  civ1: CivId
+  civ2: CivId
+  age: Age
+  displayUnitName: (id: string) => string
+}) => {
+  const makeList = (data: readonly UnitData[], civ: CivId, age: Age) =>
+    data
+      .map(ud =>
+        Array.from(createLines(ud)).find(
+          u => `${u.age}` === age && u.civs.includes(civ),
+        ),
+      )
+      .filter(<T,>(d: T | undefined): d is T => !!d)
+  const list1 = makeList(data, civ1, age)
+  const list2 = makeList(data, civ2, age)
+  // @todo add background color
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <th>civ1\civ2</th>
+          {list2.map(u => (
+            <th key={`head:${u.id}`}>{displayUnitName(u.id)}</th>
+          ))}
+        </tr>
+        {list1.map(u1 => {
+          return (
+            <tr key={`${u1.id}/head`}>
+              <th>{displayUnitName(u1.id)}</th>
+              {list2.map(u2 => {
+                //  {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
+                return (
+                  <td key={`${u1.id}/${u2.id}`}>{coef(u1, u2).toFixed(6)}</td>
+                )
+              })}
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
