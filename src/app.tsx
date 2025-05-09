@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'preact/hooks'
+import type { JSX } from 'preact/jsx-runtime'
 import { civsMap, civIds } from './civs'
 import type { UnitData } from './data'
 import { createLines, unitNames } from './create-lines'
@@ -14,8 +15,8 @@ const ages = ['1', '2', '3', '4'] as const satisfies Age[]
 type CivId = (typeof civIds)[number]
 const displayCivName = (v: CivId) => civsMap[v]?.name
 
-type Locale = 'en' | 'ja'
-const locales = ['en', 'ja'] as const satisfies Locale[]
+type Locale = 'en' | 'ja' | 'zh-hant'
+const locales = ['en', 'ja', 'zh-hant'] as const satisfies Locale[]
 
 const parseHash = () => {
   const m = location.hash.match(/#\[([^\]]+)\]/)
@@ -135,7 +136,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
     () => Object.fromEntries(data.map(d => [d.id, d])),
     [data],
   )
-  const displayUnitName = useMemo(() => {
+  const [displayUnitName, renderUnitName] = useMemo(() => {
     const map = Object.fromEntries(
       data.map(d => {
         const v =
@@ -145,7 +146,14 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
         return [d.id, v?.locale?.[locale]?.name || d.name]
       }),
     )
-    return (id: string) => map[id] ?? '?'
+    return [
+      (id: string) => map[id] ?? '?',
+      (id: string, civ: CivId) => (
+        <UnitName id={id} civ={civ} lang={locale}>
+          {map[id] ?? '?'}
+        </UnitName>
+      ),
+    ] as const
   }, [data, locale])
   const u1id = (unitIds1.includes(u1id0) ? u1id0 : unitIds1[0]) || 'archer'
   const u2id = (unitIds2.includes(u2id0) ? u2id0 : unitIds2[0]) || 'archer'
@@ -205,6 +213,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
               values={unitIds1}
               set={actions.unit1}
               name={displayUnitName}
+              lang={locale}
             />
             <SelectorToolForSet<string>
               title="unit2"
@@ -212,6 +221,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
               values={unitIds2}
               set={actions.unit2}
               name={displayUnitName}
+              lang={locale}
             />
           </>
         )}
@@ -230,7 +240,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           civ1={civ1}
           civ2={civ2}
           age={age}
-          displayUnitName={displayUnitName}
+          renderUnitName={renderUnitName}
         />
       )}
     </div>
@@ -243,12 +253,14 @@ const SelectorToolForSet = <T extends string>({
   values,
   set,
   name,
+  lang,
 }: {
   title: string
   value: T
   values: readonly T[]
   set: (v: T) => void
   name?: (v: T) => string | undefined
+  lang?: string
 }) => {
   return (
     <label>
@@ -259,6 +271,7 @@ const SelectorToolForSet = <T extends string>({
           onChange={e =>
             set((e as unknown as { target: { value: T } }).target.value)
           }
+          lang={lang}
         >
           {values.map(v => (
             <option key={v} value={v}>
@@ -329,13 +342,19 @@ const Graph = ({
   )
 }
 
-const UnitName = (item: { id: string; civ: CivId; children: string }) => {
+const UnitName = (item: {
+  id: string
+  civ: CivId
+  children: string
+  lang?: string
+}) => {
   const c = civsMap[item.civ]?.href ?? 'https://aoe4world.com/explorer'
   return (
     <a
       href={`${c}/units/${item.id}`}
       rel="nofollow noopener noreferrer"
       target="_blank"
+      lang={item.lang}
     >
       {item.children}
     </a>
@@ -347,13 +366,13 @@ const Table = ({
   civ1,
   civ2,
   age,
-  displayUnitName,
+  renderUnitName,
 }: {
   data: readonly UnitData[]
   civ1: CivId
   civ2: CivId
   age: Age
-  displayUnitName: (id: string) => string
+  renderUnitName: (id: string, civ: CivId) => JSX.Element
 }) => {
   const makeList = (data: readonly UnitData[], civ: CivId, age: Age) =>
     data
@@ -405,21 +424,13 @@ const Table = ({
             </a>
           </th>
           {list2.map(u => (
-            <th key={`head:${u.id}`}>
-              <UnitName id={u.id} civ={civ2}>
-                {displayUnitName(u.id)}
-              </UnitName>
-            </th>
+            <th key={`head:${u.id}`}>{renderUnitName(u.id, civ2)}</th>
           ))}
         </tr>
         {values.map(({ u1, cols }) => {
           return (
             <tr key={`${u1.id}/head`}>
-              <th>
-                <UnitName id={u1.id} civ={civ1}>
-                  {displayUnitName(u1.id)}
-                </UnitName>
-              </th>
+              <th>{renderUnitName(u1.id, civ1)}</th>
               {cols.map(({ u2, v }) => {
                 //  {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
                 const c = color(v)
