@@ -116,10 +116,8 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
   const unitIds1 = useMemo(
     () =>
       data
-        .filter(
-          d =>
-            d.variations.some(v => v.age <= Number(age)) &&
-            d.civs.some(c => c === civ1),
+        .filter(d =>
+          d.variations.some(v => v.age <= Number(age) && v.civs.includes(civ1)),
         )
         .map(d => d.id),
     [data, civ1],
@@ -127,10 +125,8 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
   const unitIds2 = useMemo(
     () =>
       data
-        .filter(
-          d =>
-            d.variations.some(v => v.age <= Number(age)) &&
-            d.civs.some(c => c === civ2),
+        .filter(d =>
+          d.variations.some(v => v.age <= Number(age) && v.civs.includes(civ2)),
         )
         .map(d => d.id),
     [data, civ2],
