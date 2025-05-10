@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'preact/hooks'
 import type { JSX } from 'preact/jsx-runtime'
 import { civsMap, civIds } from './civs'
 import type { UnitData } from './data'
-import { createLines, unitNames } from './create-lines'
+import { createLines } from './create-lines'
 import { coef, trade } from './matchup'
 import chroma from 'chroma-js'
 
@@ -97,8 +97,13 @@ const useHash = () => {
     return {
       civ1: (c: CivId) => push((ref.current!.c1 = c)),
       civ2: (c: CivId) => push((ref.current!.c2 = c)),
-      mode: (m: Mode) => push((ref.current!.m = m)),
       age: (a: Age) => push((ref.current!.a = a)),
+      mode: (m: Mode, u1: string, u2: string) =>
+        push(
+          ((ref.current!.m = m),
+          (ref.current!.u1 = u1),
+          (ref.current!.u2 = u2)),
+        ),
       unit1: (u: string) => push((ref.current!.u1 = u)),
       unit2: (u: string) => push((ref.current!.u2 = u)),
     }
@@ -155,21 +160,25 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
       ),
     ] as const
   }, [data, locale])
-  const u1id = (unitIds1.includes(u1id0) ? u1id0 : unitIds1[0]) || 'archer'
-  const u2id = (unitIds2.includes(u2id0) ? u2id0 : unitIds2[0]) || 'archer'
   const unitsForTable = useMemo(
     () =>
-      // unitNames
-      //   .map(name => data.find(d => d.name === name))
-      //   .filter(<T,>(d: T | undefined): d is T => !!d),
       data.filter(
         d =>
+          d.id !== 'scout' &&
           d.classes.some(c => ['melee', 'ranged', 'battle'].includes(c)) &&
           d.variations.some(v => v.costs.total) &&
           !d.classes.includes('hero'),
       ),
-    [data, unitNames],
+    [data],
   )
+  const u1id =
+    (unitIds1.includes(u1id0)
+      ? u1id0
+      : unitsForTable.find(u => unitIds1.includes(u.id))?.id) || 'archer'
+  const u2id =
+    (unitIds2.includes(u2id0)
+      ? u2id0
+      : unitsForTable.find(u => unitIds2.includes(u.id))?.id) || 'archer'
   return (
     <div>
       <dl class="tools">
@@ -203,7 +212,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           title="mode"
           value={mode}
           values={modes}
-          set={actions.mode}
+          set={m => actions.mode(m, u1id, u2id)}
         />
         {mode !== '1v1' ? null : (
           <>

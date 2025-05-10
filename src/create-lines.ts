@@ -4,7 +4,7 @@
 // TODO : add output directory
 // TODO : add more stats such as movespeed/range/specific ressource cost
 
-import { UnitData } from './data'
+import type { UnitData } from './data'
 
 // I've selected only "mass-able" units, feel free to add more.
 export const unitNames = [
