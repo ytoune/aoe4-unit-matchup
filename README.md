@@ -2,7 +2,7 @@
 
 A **TypeScript** project to explore the cost efficiency between any of the AOE4 units, accounting for upgrades, attack speed, etc...
 
-[web page](https://ytoune.github.io/aoe4-unit-matchup/)
+[try on website](https://ytoune.github.io/aoe4-unit-matchup/)
 
 forked from owelcomm/AOE4-Unit-Matchup
 
