@@ -302,7 +302,13 @@ export const trade = (
     let distance = shooter.weaponRange - target.weaponRange
     //         # only one unit strikes the other
     //         while distance > no_kiting_speed*shoot_time:
-    while (distance > noKitingSpeed * shootTime) {
+    for (
+      let i = 0;
+      i < 10_000 &&
+      distance > noKitingSpeed * shootTime &&
+      targetHealthList[targetHealthList.length - 1]! > 0;
+      ++i
+    ) {
       //             target_health_list.append(
       //                 max(target_health_list[-1] - compute_damage(shooter, target), 0)
       //             )
@@ -352,9 +358,12 @@ export const trade = (
     u2nextAttackTime = u2.attackSpeed
   }
   //     while unit_1_health_list[-1] > 0 and unit_2_health_list[-1] > 0:
-  while (
+  for (
+    let i = 0;
+    i < 10_000 &&
     u1healthList[u1healthList.length - 1]! > 0 &&
-    u2healthList[u2healthList.length - 1]! > 0
+    u2healthList[u2healthList.length - 1]! > 0;
+    ++i
   ) {
     //         dt = min(unit_1_next_attack_time, unit_2_next_attack_time)
     const dt = Math.min(u1nextAttackTime, u2nextAttackTime)
