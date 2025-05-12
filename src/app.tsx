@@ -24,25 +24,32 @@ const parseHash = () => {
   if (!location.hash) r.m = 'summary'
   if (m) {
     for (const t of m[1]!.split(',')) {
-      const m = t.match(/^(c1|c2|m|a|u1|u2)=(.*)$/)
+      const m = t.match(/^(c1|c2|m|a|a1|a2|u1|u2)=(.*)$/)
       if (m) {
-        const k = m[1] as 'c1' | 'c2' | 'm' | 'a' | 'u1' | 'u2'
+        const k = m[1] as 'c1' | 'c2' | 'm' | 'a' | 'a1' | 'a2' | 'u1' | 'u2'
         const v = m[2] as string
         switch (k) {
           case 'c1':
           case 'c2':
-            if ((civIds.includes as (v: string) => v is CivId)(v)) r[k] = v
+            if ((civIds.includes as (v: string) => v is CivId)(v)) r[k] ??= v
             break
           case 'm':
-            if ((modes.includes as (v: string) => v is Mode)(v)) r[k] = v
+            if ((modes.includes as (v: string) => v is Mode)(v)) r[k] ??= v
             break
           case 'a':
-            if ((ages.includes as (v: string) => v is Age)(v)) r[k] = v
+            if ((ages.includes as (v: string) => v is Age)(v))
+              (r.a1 ??= v), (r.a2 ??= v)
+            break
+          case 'a1':
+          case 'a2':
+            if ((ages.includes as (v: string) => v is Age)(v)) r[k] ??= v
             break
           case 'u1':
           case 'u2':
-            r[k] = v
+            r[k] ??= v
             break
+          default:
+            k satisfies never
         }
       }
     }
@@ -51,20 +58,22 @@ const parseHash = () => {
 }
 type HashState = {
   c1: CivId
+  a1: Age
   c2: CivId
+  a2: Age
   m: Mode
-  a: Age
   u1?: string
   u2?: string
 }
 const makeHash = (r: HashState) =>
   `#[${[
     r.c1 && `c1=${r.c1}`,
+    r.a1 && r.a1 !== r.a2 && `a1=${r.a1}`,
     r.c2 && `c2=${r.c2}`,
-    r.a && `a=${r.a}`,
+    r.a2 && (r.a1 !== r.a2 ? `a2=${r.a2}` : `a=${r.a2}`),
     r.m && `m=${r.m}`,
-    r.u1 && r.m === '1v1' && `u1=${r.u1}`,
-    r.u2 && r.m === '1v1' && `u2=${r.u2}`,
+    !!r.u1 && r.m === '1v1' && `u1=${r.u1}`,
+    !!r.u2 && r.m === '1v1' && `u2=${r.u2}`,
   ]
     .filter(Boolean)
     .join(',')}]`
@@ -74,7 +83,8 @@ const useHash = () => {
     c1: 'hr',
     c2: 'hr',
     m: 'summary',
-    a: '2',
+    a1: '2',
+    a2: '2',
     u1: 'archer',
     u2: 'archer',
     ...parseHash(),
@@ -97,7 +107,8 @@ const useHash = () => {
     return {
       civ1: (c: CivId) => push((ref.current!.c1 = c)),
       civ2: (c: CivId) => push((ref.current!.c2 = c)),
-      age: (a: Age) => push((ref.current!.a = a)),
+      age1: (a: Age) => push((ref.current!.a1 = a)),
+      age2: (a: Age) => push((ref.current!.a2 = a)),
       mode: (m: Mode, u1: string, u2: string) =>
         push(
           ((ref.current!.m = m),
@@ -106,7 +117,7 @@ const useHash = () => {
         ),
       unit1: (u: string) => push((ref.current!.u1 = u)),
       unit2: (u: string) => push((ref.current!.u2 = u)),
-    }
+    } as const
   }, [ref, pin])
   return [ref.current!, a] as const
 }
@@ -116,26 +127,38 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
     (navigator.languages as Locale[]).find(l => locales.includes(l)) ?? 'ja',
   )
   const [
-    { c1: civ1, c2: civ2, a: age, m: mode, u1: u1id0 = '', u2: u2id0 = '' },
+    {
+      c1: civ1,
+      c2: civ2,
+      a1: age1,
+      a2: age2,
+      m: mode,
+      u1: u1id0 = '',
+      u2: u2id0 = '',
+    },
     actions,
   ] = useHash()
   const unitIds1 = useMemo(
     () =>
       data
         .filter(d =>
-          d.variations.some(v => v.age <= Number(age) && v.civs.includes(civ1)),
+          d.variations.some(
+            v => v.age <= Number(age1) && v.civs.includes(civ1),
+          ),
         )
         .map(d => d.id),
-    [data, civ1],
+    [data, civ1, age1],
   )
   const unitIds2 = useMemo(
     () =>
       data
         .filter(d =>
-          d.variations.some(v => v.age <= Number(age) && v.civs.includes(civ2)),
+          d.variations.some(
+            v => v.age <= Number(age2) && v.civs.includes(civ2),
+          ),
         )
         .map(d => d.id),
-    [data, civ2],
+    [data, civ2, age2],
   )
   const unitMap = useMemo(
     () => Object.fromEntries(data.map(d => [d.id, d])),
@@ -188,26 +211,36 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           values={locales}
           set={c => setLocale(c)}
         />
-        <SelectorToolForSet<CivId>
-          title="civ1"
-          value={civ1}
-          values={civIds}
-          set={actions.civ1}
-          name={displayCivName}
-        />
-        <SelectorToolForSet<CivId>
-          title="civ2"
-          value={civ2}
-          values={civIds}
-          set={actions.civ2}
-          name={displayCivName}
-        />
-        <SelectorToolForSet<Age>
-          title="age"
-          value={age}
-          values={ages}
-          set={actions.age}
-        />
+        <div>
+          <SelectorToolForSet<CivId>
+            title="civ1"
+            value={civ1}
+            values={civIds}
+            set={actions.civ1}
+            name={displayCivName}
+          />
+          <SelectorToolForSet<Age>
+            title="age"
+            value={age1}
+            values={ages}
+            set={actions.age1}
+          />
+        </div>
+        <div>
+          <SelectorToolForSet<CivId>
+            title="civ2"
+            value={civ2}
+            values={civIds}
+            set={actions.civ2}
+            name={displayCivName}
+          />
+          <SelectorToolForSet<Age>
+            title="age"
+            value={age2}
+            values={ages}
+            set={actions.age2}
+          />
+        </div>
         <SelectorToolForSet<Mode>
           title="mode"
           value={mode}
@@ -239,16 +272,19 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
         <Graph
           civ1={civ1}
           civ2={civ2}
-          age={age}
+          age1={age1}
+          age2={age2}
           u1={unitMap[u1id]}
           u2={unitMap[u2id]}
+          renderUnitName={renderUnitName}
         />
       ) : (
         <Table
           data={unitsForTable}
           civ1={civ1}
           civ2={civ2}
-          age={age}
+          age1={age1}
+          age2={age2}
           renderUnitName={renderUnitName}
         />
       )}
@@ -303,51 +339,73 @@ const findUnit = (civ: CivId, age: Age, ud?: UnitData) => {
 const Graph = ({
   civ1,
   civ2,
-  age,
+  age1,
+  age2,
   u1: ud1,
   u2: ud2,
+  renderUnitName,
 }: {
   civ1: CivId
   civ2: CivId
-  age: Age
+  age1: Age
+  age2: Age
   u1?: UnitData
   u2?: UnitData
+  renderUnitName: (id: string, civ: CivId) => JSX.Element
 }) => {
   if (!ud1 || !ud2) return null
   // @todo use echarts or d3
-  const u1 = findUnit(civ1, age, ud1)
-  const u2 = findUnit(civ2, age, ud2)
+  const u1 = findUnit(civ1, age1, ud1)
+  const u2 = findUnit(civ2, age2, ud2)
   if (!u1 || !u2) return null
   const [u1healthList, u2healthList, timestamps] = trade(u1, u2)
+  const hpdiff1 =
+    (u1healthList[0]! - u1healthList[u1healthList.length - 1]!) /
+    u1healthList[0]!
+  const c1 = u1.cost * hpdiff1
+  const hpdiff2 =
+    (u2healthList[0]! - u2healthList[u2healthList.length - 1]!) /
+    u2healthList[0]!
+  const c2 = u2.cost * hpdiff2
+  const costRatio = c1 / c2
   const length = Math.min(
     u1healthList.length,
     u2healthList.length,
     timestamps.length,
   )
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>timestamp</th>
-          <th>unit1hp</th>
-          <th>unit2hp</th>
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from({ length }, (_, i) => {
-          const u1health = u1healthList[i]!
-          const u2health = u2healthList[i]!
-          const ts = timestamps[i]!.toFixed(3)
-          return (
-            <tr key={`${i}`}>
-              <td>{ts}</td>
-              <td>{u1health}</td>
-              <td>{u2health}</td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>timestamp</th>
+            <th>unit1hp</th>
+            <th>unit2hp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length }, (_, i) => {
+            const u1health = u1healthList[i]!
+            const u2health = u2healthList[i]!
+            const ts = timestamps[i]!.toFixed(3)
+            return (
+              <tr key={`${i}`}>
+                <td>{ts}</td>
+                <td>{u1health}</td>
+                <td>{u2health}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      <p>
+        cost for {renderUnitName(u1.id, civ1)} : {c1.toFixed(6)}
+      </p>
+      <p>
+        cost for {renderUnitName(u2.id, civ2)} : {c2.toFixed(6)}
+      </p>
+      <p>cost ratio : {costRatio.toFixed(6)}</p>
+    </>
   )
 }
 
@@ -374,22 +432,23 @@ const Table = ({
   data,
   civ1,
   civ2,
-  age,
+  age1,
+  age2,
   renderUnitName,
 }: {
   data: readonly UnitData[]
   civ1: CivId
   civ2: CivId
-  age: Age
+  age1: Age
+  age2: Age
   renderUnitName: (id: string, civ: CivId) => JSX.Element
 }) => {
   const makeList = (data: readonly UnitData[], civ: CivId, age: Age) =>
     data
       .map(ud => findUnit(civ, age, ud))
       .filter(<T,>(d: T | undefined): d is T => !!d)
-  const list1 = makeList(data, civ1, age)
-  const list2 = makeList(data, civ2, age)
-  // @todo add background color
+  const list1 = makeList(data, civ1, age1)
+  const list2 = makeList(data, civ2, age2)
   // chroma.brewer.RdYlGn
   const scale = useMemo(() => chroma.scale('RdYlGn'), [])
   let min = 1 / 0
@@ -428,7 +487,15 @@ const Table = ({
       <tbody>
         <tr>
           <th>
-            <a href={makeHash({ c1: civ2, c2: civ1, a: age, m: 'summary' })}>
+            <a
+              href={makeHash({
+                c1: civ2,
+                c2: civ1,
+                a1: age1,
+                a2: age2,
+                m: 'summary',
+              })}
+            >
               civ1\civ2
             </a>
           </th>
@@ -449,7 +516,8 @@ const Table = ({
                       href={makeHash({
                         c1: civ1,
                         c2: civ2,
-                        a: age,
+                        a1: age1,
+                        a2: age2,
                         m: '1v1',
                         u1: u1.id,
                         u2: u2.id,

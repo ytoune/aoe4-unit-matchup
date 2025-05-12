@@ -7,12 +7,17 @@
     .tools {
       user-select: none;
     }
-    .tools label {
+    .tools > label {
       display: block;
     }
     .tools label dt,
     .tools label dd {
-      display: inline-block;
+      margin: 0;
+      display: inline;
+    }
+    .tools label dd {
+      padding-inline-start: 0.25em;
+      margin-inline-end: 0.5em;
     }
     .line {
       display: block;
