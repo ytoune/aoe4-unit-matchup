@@ -15,8 +15,34 @@ export type UnitVariation = ty.Unit & {
 // type Out = (typeof import('./all-unified.json'))['data'][number] //['type']
 
 export const getData = async (): Promise<readonly UnitData[]> =>
-  await import('./all-unified.json')
-    .then(d => d.default.data as UnitData[])
+  await Promise.all([
+    fetch('https://data.aoe4world.com/units/all-unified.json')
+      .then(r => r.json())
+      .then(
+        d => d.data as UnitData[],
+        () => null,
+      ),
+    import('./all-unified.json').then(d => d.default.data as UnitData[]),
+  ])
+    .then(([a, b]) => {
+      if (null === a) return b
+      return a.map((a1, i) => {
+        const b1 = b[i]?.id === a1.id ? b[i] : b.find(i => i.id === a1.id)
+        if (b1) {
+          a1.variations.map((av, j) => {
+            const bv =
+              b1.variations[j]?.id === av.id
+                ? b1.variations[j]
+                : b1.variations.find(i => i.id === av.id)
+            if (bv) av.locale = bv.locale
+            return av
+          })
+        }
+        return a1
+      })
+    })
+    // await import('./all-unified.json')
+    //   .then(d => d.default.data as UnitData[])
     .then(list =>
       list
         .filter(
