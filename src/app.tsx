@@ -188,9 +188,15 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
       data.filter(
         d =>
           d.id !== 'scout' &&
-          d.classes.some(c => ['melee', 'ranged', 'battle'].includes(c)) &&
-          d.variations.some(v => v.costs.total) &&
-          !d.classes.includes('hero'),
+          !d.classes.includes('hero') &&
+          d.classes.some(c =>
+            ['melee', 'ranged', 'battle', 'religious'].includes(c),
+          ) &&
+          d.variations.some(
+            v =>
+              v.costs.total &&
+              v.weapons.some(w => ['melee', 'ranged'].includes(w.type)),
+          ),
       ),
     [data],
   )
