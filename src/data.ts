@@ -90,6 +90,7 @@ export const getData = async (): Promise<readonly UnitData[]> =>
             const costs = makeCost(c, div)
             for (const v of u.variations) v.costs = costs
           }
+          for (const v of u.variations) v.weapons = v.weapons.filter(Boolean)
           if ('shinobi' === id && costNum.join(':') === '0')
             replaceCost({ food: 50, gold: 50 })
           if ('wynguard-footman' === id) {
