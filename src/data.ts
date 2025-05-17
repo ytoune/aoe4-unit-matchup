@@ -108,6 +108,42 @@ export const getData = async (): Promise<readonly UnitData[]> =>
           if ('bedouin-swordsman' === id) replaceCost({ gold: 425 / 8 })
           if ('bedouin-skirmisher' === id) replaceCost({ gold: 425 / 8 })
           if ('militia' === id) replaceCost({ food: 55 }, 2)
+          if ('black-rider' === id) {
+            u.minAge = 4
+            for (const v of u.variations) v.age = 4
+          }
+          if (u.variations.every(v => !v.producedBy.length)) {
+            const make = (id: string, age?: number) => {
+              for (const v of u.variations) v.producedBy.push(id)
+              if (age) {
+                u.minAge = age
+                for (const v of u.variations) v.age = age
+              }
+            }
+            switch (id) {
+              case 'bedouin-skirmisher':
+              case 'bedouin-swordsman':
+                make('house-of-wisdom', 2)
+                break
+              case 'wynguard-footman':
+              case 'wynguard-ranger':
+                make('wynguard-palace', 4)
+                break
+              case 'jeanne-darc-blast-cannon':
+              case 'jeanne-darc-hunter':
+              case 'jeanne-darc-knight':
+              case 'jeanne-darc-markswoman':
+              case 'jeanne-darc-mounted-archer':
+              case 'jeanne-darc-peasant':
+              case 'jeanne-darc-woman-at-arms':
+              case 'khan':
+                make('capital-town-center')
+                break
+              case 'militia':
+                make('kremlin')
+                break
+            }
+          }
           return u
         }),
     )
