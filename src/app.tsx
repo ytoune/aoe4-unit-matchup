@@ -38,7 +38,7 @@ const parseHash = () => {
             break
           case 'a':
             if ((ages.includes as (v: string) => v is Age)(v))
-              ((r.a1 ??= v), (r.a2 ??= v))
+              (r.a1 ??= v), (r.a2 ??= v)
             break
           case 'a1':
           case 'a2':
@@ -188,10 +188,17 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
       data.filter(
         d =>
           d.id !== 'scout' &&
-          !d.classes.includes('hero') &&
-          d.classes.some(c =>
-            ['melee', 'ranged', 'battle', 'religious'].includes(c),
-          ) &&
+          // !d.classes.includes('hero') &&
+          !d.classes.some(c => ['hero', 'ship', 'warship'].includes(c)) &&
+          // d.classes.some(c =>
+          //   [
+          //     'melee',
+          //     'ranged',
+          //     'battle',
+          //     'religious',
+          //     'melee_infantry',
+          //   ].includes(c),
+          // ) &&
           d.variations.some(
             v =>
               v.costs.total &&
