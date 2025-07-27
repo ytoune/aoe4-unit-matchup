@@ -1,43 +1,22 @@
 // @ts-check
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { fixupConfigRules, fixupPluginRules } from '@eslint/compat'
-// @ts-expect-error: ignore no type
-import _import from 'eslint-plugin-import'
 import github from 'eslint-plugin-github'
+import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import globals from 'globals'
 import tsParser from '@typescript-eslint/parser'
 import js from '@eslint/js'
-import { FlatCompat } from '@eslint/eslintrc'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-})
+const githubConfigs = github.getFlatConfigs()
+
+const ignores = ['node_modules', 'dist', '.cache', '.swc', 'scripts/sandbox*']
 
 export default [
+  js.configs.recommended,
+  githubConfigs.recommended,
+  ...githubConfigs.typescript,
+  eslintConfigPrettier,
   {
-    ignores: ['node_modules', 'dist', '.cache', '.swc', 'scripts/sandbox*'],
-  },
-  ...fixupConfigRules(
-    compat.extends(
-      'prettier',
-      'plugin:import/typescript',
-      'plugin:github/recommended',
-      'plugin:github/typescript',
-    ),
-  ),
-  {
-    plugins: {
-      // '@typescript-eslint': typescriptEslint,
-      import: fixupPluginRules(_import),
-      // @ts-expect-error: as any
-      github: fixupPluginRules(github),
-    },
+    ignores,
     languageOptions: {
       globals: { ...globals.node, ...globals.jest },
       parser: tsParser,
@@ -71,10 +50,11 @@ export default [
       'no-console': 'off',
       'no-negated-condition': 'off',
       'func-style': ['error', 'expression'],
-      // 'filenames/match-regex': ['error', '^[a-z0-9-]+(.[a-z0-9-]+)?$'],
+      'github/filenames-match-regex': ['error', '^([a-z0-9-]+)$'],
       'filenames/match-regex': 'off',
       'import/order': 'error',
       'import/no-default-export': 'off',
+      'import/no-namespace': 'off',
       'import/no-cycle': 'off',
       'github/no-then': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'array' }],
@@ -83,6 +63,7 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/no-shadow': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
