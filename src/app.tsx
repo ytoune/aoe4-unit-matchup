@@ -37,8 +37,10 @@ const parseHash = () => {
             if ((modes.includes as (v: string) => v is Mode)(v)) r[k] ??= v
             break
           case 'a':
-            if ((ages.includes as (v: string) => v is Age)(v))
-              ((r.a1 ??= v), (r.a2 ??= v))
+            if ((ages.includes as (v: string) => v is Age)(v)) {
+              r.a1 ??= v
+              r.a2 ??= v
+            }
             break
           case 'a1':
           case 'a2':

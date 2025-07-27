@@ -61,6 +61,7 @@ export default defineConfig([
       'import/no-namespace': 'off',
       'import/no-cycle': 'off',
       'import/no-named-as-default': 'off',
+      'import/no-named-as-default-member': 'off',
       'import/extensions': [
         'error',
         'always',
