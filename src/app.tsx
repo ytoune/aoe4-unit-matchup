@@ -38,7 +38,7 @@ const parseHash = () => {
             break
           case 'a':
             if ((ages.includes as (v: string) => v is Age)(v))
-              (r.a1 ??= v), (r.a2 ??= v)
+              ((r.a1 ??= v), (r.a2 ??= v))
             break
           case 'a1':
           case 'a2':
