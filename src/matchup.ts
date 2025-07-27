@@ -291,13 +291,24 @@ export const trade = (
   ): readonly [number[], number[], float] => {
     //         timestamps = [0]
     const timestamps = [0]
+    const targetHealthList = [Math.max(target.hp, 0)]
+    const lastHp = () => targetHealthList[targetHealthList.length - 1]!
+    const damage = (damage: number, time: number) => {
+      timestamps.push(timestamps[timestamps.length - 1]! + time)
+      targetHealthList.push(Math.max(lastHp() - damage, 0))
+    }
+    // const timestamps = [0, 0]
     //         no_kiting_speed = target.speed
     const noKitingSpeed = target.speed
     //         shoot_time = shooter.attack_speed
     const shootTime = shooter.attackSpeed
     const computedDamage = computeDamage(shooter, target)
     //         target_health_list = [max(target.hp - compute_damage(shooter, target), 0)]
-    const targetHealthList = [Math.max(target.hp - computedDamage, 0)]
+    // const targetHealthList = [
+    //   Math.max(target.hp, 0),
+    //   Math.max(target.hp - computedDamage, 0),
+    // ]
+    damage(computedDamage, 0)
     //         distance = shooter.weapon_range - target.weapon_range
     let distance = shooter.weaponRange - target.weaponRange
     //         # only one unit strikes the other
@@ -312,14 +323,15 @@ export const trade = (
       //             target_health_list.append(
       //                 max(target_health_list[-1] - compute_damage(shooter, target), 0)
       //             )
-      targetHealthList.push(
-        Math.max(
-          targetHealthList[targetHealthList.length - 1]! - computedDamage,
-          0,
-        ),
-      )
+      // targetHealthList.push(
+      //   Math.max(
+      //     targetHealthList[targetHealthList.length - 1]! - computedDamage,
+      //     0,
+      //   ),
+      // )
       //             timestamps.append(timestamps[-1]+shoot_time)
-      timestamps.push(timestamps[timestamps.length - 1]! + shootTime)
+      // timestamps.push(timestamps[timestamps.length - 1]! + shootTime)
+      damage(computedDamage, shootTime)
       //             distance -= no_kiting_speed*shoot_time
       distance -= noKitingSpeed * shootTime
     }
@@ -354,8 +366,10 @@ export const trade = (
     timestamps = [0]
     //         unit_1_next_attack_time = unit_1.attack_speed
     //         unit_2_next_attack_time = unit_2.attack_speed
-    u1nextAttackTime = u1.attackSpeed
-    u2nextAttackTime = u2.attackSpeed
+    // u1nextAttackTime = u1.attackSpeed
+    // u2nextAttackTime = u2.attackSpeed
+    u1nextAttackTime = 0
+    u2nextAttackTime = 0
   }
   //     while unit_1_health_list[-1] > 0 and unit_2_health_list[-1] > 0:
   for (
