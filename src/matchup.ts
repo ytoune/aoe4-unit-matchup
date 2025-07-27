@@ -7,7 +7,7 @@
 // import matplotlib.pylab as mpl
 // import pandas as pd
 
-import { Line } from './create-lines'
+import type { Line } from './create-lines'
 
 // class Unit:
 type Unit = Readonly<{
@@ -117,13 +117,13 @@ const createUnit = ({
 }>): Unit => {
   //         if unit_type is None:
   //             unit_type = []
-  if (unitType === null) unitType = []
+  if (null === unitType) unitType = []
   //         if damage_bonus_type is None:
   //             damage_bonus_type = []
-  if (damageBonusType === null) damageBonusType = []
+  if (null === damageBonusType) damageBonusType = []
   //         if damage_bonus is None:
   //             damage_bonus = []
-  if (damageBonus === null) damageBonus = []
+  if (null === damageBonus) damageBonus = []
   //         # basic
   //         self.hp = hp * hp_mult
   //         self.name = name
@@ -226,7 +226,7 @@ const checkBonusDamage = (u1: Unit, u2: Unit): float => {
   //     bonus_value = 0
   let bonusValue = 0
   //     for bonus, value in zip(unit_1.damage_bonus_type, unit_1.damage_bonus):
-  let length = Math.min(u1.damageBonusType.length, u1.damageBonus.length)
+  const length = Math.min(u1.damageBonusType.length, u1.damageBonus.length)
   for (let i = 0; i < length; ++i) {
     const bonus = u1.damageBonusType[i]!
     const value = u1.damageBonus[i]!

@@ -48,8 +48,8 @@ export const getData = async (): Promise<readonly UnitData[]> =>
         .filter(
           u =>
             !(
-              u.id === 'cavalry-archer' &&
-              u.civs.join('') === 'ot' &&
+              'cavalry-archer' === u.id &&
+              'ot' === u.civs.join('') &&
               u.variations.every(v => !v.locale)
             ),
         )
@@ -91,7 +91,7 @@ export const getData = async (): Promise<readonly UnitData[]> =>
             for (const v of u.variations) v.costs = costs
           }
           for (const v of u.variations) v.weapons = v.weapons.filter(Boolean)
-          if ('shinobi' === id && costNum.join(':') === '0')
+          if ('shinobi' === id && '0' === costNum.join(':'))
             replaceCost({ food: 50, gold: 50 })
           if ('wynguard-footman' === id) {
             const item = data

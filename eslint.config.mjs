@@ -1,5 +1,6 @@
 // @ts-check
 
+import { defineConfig, globalIgnores } from 'eslint/config'
 import github from 'eslint-plugin-github'
 import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import globals from 'globals'
@@ -8,15 +9,26 @@ import js from '@eslint/js'
 
 const githubConfigs = github.getFlatConfigs()
 
-const ignores = ['node_modules', 'dist', '.cache', '.swc', 'scripts/sandbox*']
+const ignores = [
+  'node_modules/',
+  'dist/',
+  '.cache/',
+  '.swc/',
+  'scripts/sandbox/',
+]
 
-export default [
+const JS_EXT = 'ts,tsx,mts,mtsx,js,jsx,mjs,mjsx,cjs'
+const jsExtensions = JS_EXT.split(',')
+
+export default defineConfig([
   js.configs.recommended,
   githubConfigs.recommended,
+  githubConfigs.browser,
   ...githubConfigs.typescript,
   eslintConfigPrettier,
+  globalIgnores(ignores),
   {
-    ignores,
+    files: [`src/**/*.{${JS_EXT}}`],
     languageOptions: {
       globals: { ...globals.node, ...globals.jest },
       parser: tsParser,
@@ -30,21 +42,13 @@ export default [
         'eslint-import-resolver-typescript': true,
       },
       'import/parsers': {
-        '@typescript-eslint/parser': [
-          '.ts',
-          '.tsx',
-          '.mts',
-          '.cts',
-          '.js',
-          '.jsx',
-          '.mjs',
-          '.cjs',
-        ],
+        '@typescript-eslint/parser': jsExtensions,
       },
     },
     rules: {
-      yoda: ['error', 'always', { exceptRange: true }],
-      complexity: ['error', 30],
+      // yoda: ['error', 'always', { exceptRange: true,  }],
+      yoda: ['error', 'always', { onlyEquality: true }],
+      complexity: ['error', 40],
       'prefer-arrow-callback': 'error',
       'arrow-body-style': ['error', 'as-needed'],
       'no-console': 'off',
@@ -56,6 +60,12 @@ export default [
       'import/no-default-export': 'off',
       'import/no-namespace': 'off',
       'import/no-cycle': 'off',
+      'import/no-named-as-default': 'off',
+      'import/extensions': [
+        'error',
+        'always',
+        Object.fromEntries(jsExtensions.map(e => [e, 'never'])),
+      ],
       'github/no-then': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'array' }],
       '@typescript-eslint/no-explicit-any': ['warn', { fixToUnknown: true }],
@@ -79,4 +89,4 @@ export default [
       ],
     },
   },
-]
+])

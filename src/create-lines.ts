@@ -137,11 +137,11 @@ export const createLines = function* (unit: UnitData): Iterable<Line> {
     //                 else:
     //                     print(f"issue with damage for {name}")
     const weapon =
-      u.weapons.find(w => w.type === 'melee') ||
-      u.weapons.find(w => w.type === 'ranged') ||
+      u.weapons.find(w => 'melee' === w.type) ||
+      u.weapons.find(w => 'ranged' === w.type) ||
       null
-    const meleeDamage = weapon?.type === 'melee' ? weapon.damage : 0
-    const rangeDamage = weapon?.type === 'ranged' ? weapon.damage : 0
+    const meleeDamage = 'melee' === weapon?.type ? weapon.damage : 0
+    const rangeDamage = 'ranged' === weapon?.type ? weapon.damage : 0
     //                 weapon_range = weapon.get("range", {"max":0})["max"]
     const weaponRange = weapon?.range?.max ?? 0
     //                 attack_speed = weapon.get("speed", "")
@@ -171,8 +171,8 @@ export const createLines = function* (unit: UnitData): Iterable<Line> {
     //                         melee_armor = armor.get("value", 0)
     //                     elif armor["type"] == "ranged":
     //                         range_armor = armor.get("value", 0)
-    const meleeArmor = u.armor.find(a => a.type === 'melee')?.value ?? 0
-    const rangeArmor = u.armor.find(a => a.type === 'ranged')?.value ?? 0
+    const meleeArmor = u.armor.find(a => 'melee' === a.type)?.value ?? 0
+    const rangeArmor = u.armor.find(a => 'ranged' === a.type)?.value ?? 0
     //                 # misc
     //                 cost = unit["costs"].get("total")
     const cost = u.costs.total
@@ -194,7 +194,7 @@ export const createLines = function* (unit: UnitData): Iterable<Line> {
     let rangeMultBonus = 1 // default value, do not modify
     let meleeMultBonus = 1 // default value, do not modify
     //                 if age == 4:
-    if (age === 4) {
+    if (4 === age) {
       //                     if "cavalry" in unit_type:
       //                         hp_mult = 1.25
       if (unitType.includes('cavalry')) {

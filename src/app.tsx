@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'preact/hooks'
 import type { JSX } from 'preact/jsx-runtime'
+import chroma from 'chroma-js'
 import { civsMap, civIds } from './civs'
 import type { UnitData } from './data'
 import { createLines } from './create-lines'
 import { coef, trade } from './matchup'
-import chroma from 'chroma-js'
 
 type Mode = '1v1' | 'summary'
 const modes = ['summary', '1v1'] as const satisfies Mode[]
@@ -38,7 +38,7 @@ const parseHash = () => {
             break
           case 'a':
             if ((ages.includes as (v: string) => v is Age)(v))
-              (r.a1 ??= v), (r.a2 ??= v)
+              ((r.a1 ??= v), (r.a2 ??= v))
             break
           case 'a1':
           case 'a2':
@@ -72,8 +72,8 @@ const makeHash = (r: HashState) =>
     r.c2 && `c2=${r.c2}`,
     r.a2 && (r.a1 !== r.a2 ? `a2=${r.a2}` : `a=${r.a2}`),
     r.m && `m=${r.m}`,
-    !!r.u1 && r.m === '1v1' && `u1=${r.u1}`,
-    !!r.u2 && r.m === '1v1' && `u2=${r.u2}`,
+    !!r.u1 && '1v1' === r.m && `u1=${r.u1}`,
+    !!r.u2 && '1v1' === r.m && `u2=${r.u2}`,
   ]
     .filter(Boolean)
     .join(',')}]`
@@ -274,7 +274,7 @@ export const App = ({ data }: { readonly data: readonly UnitData[] }) => {
           </>
         )}
       </dl>
-      {mode === '1v1' ? (
+      {'1v1' === mode ? (
         <Graph
           civ1={civ1}
           civ2={civ2}
@@ -312,28 +312,26 @@ const SelectorToolForSet = <T extends string>({
   set: (v: T) => void
   name?: (v: T) => string | undefined
   lang?: string
-}) => {
-  return (
-    <label>
-      <dt>{title}</dt>
-      <dd>
-        <select
-          value={value}
-          onChange={e =>
-            set((e as unknown as { target: { value: T } }).target.value)
-          }
-          lang={lang}
-        >
-          {values.map(v => (
-            <option key={v} value={v}>
-              {name?.(v) ?? v}
-            </option>
-          ))}
-        </select>
-      </dd>
-    </label>
-  )
-}
+}) => (
+  <label>
+    <dt>{title}</dt>
+    <dd>
+      <select
+        value={value}
+        onChange={e =>
+          set((e as unknown as { target: { value: T } }).target.value)
+        }
+        lang={lang}
+      >
+        {values.map(v => (
+          <option key={v} value={v}>
+            {name?.(v) ?? v}
+          </option>
+        ))}
+      </select>
+    </dd>
+  </label>
+)
 
 const findUnit = (civ: CivId, age: Age, ud?: UnitData) => {
   if (!ud) return
@@ -470,8 +468,8 @@ const Table = ({
   }))
   const color = (v: number) => {
     const mk = () => {
-      if (v === 0) return 0
-      if (v === 1 / 0) return 1
+      if (0 === v) return 0
+      if (1 / 0 === v) return 1
       if (min <= v && v < 1) return (v - min) / (1 - min) / 2
       if (1 <= v && v <= max) return 0.5 + Math.log(v) / Math.log(max) / 2
       return
@@ -509,34 +507,32 @@ const Table = ({
             <th key={`head:${u.id}`}>{renderUnitName(u.id, civ2)}</th>
           ))}
         </tr>
-        {values.map(({ u1, cols }) => {
-          return (
-            <tr key={`${u1.id}/head`}>
-              <th>{renderUnitName(u1.id, civ1)}</th>
-              {cols.map(({ u2, v }) => {
-                //  {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
-                const c = color(v)
-                return (
-                  <td key={`${u1.id}/${u2.id}`} style={c}>
-                    <a
-                      href={makeHash({
-                        c1: civ1,
-                        c2: civ2,
-                        a1: age1,
-                        a2: age2,
-                        m: '1v1',
-                        u1: u1.id,
-                        u2: u2.id,
-                      })}
-                    >
-                      {v.toFixed(6)}
-                    </a>
-                  </td>
-                )
-              })}
-            </tr>
-          )
-        })}
+        {values.map(({ u1, cols }) => (
+          <tr key={`${u1.id}/head`}>
+            <th>{renderUnitName(u1.id, civ1)}</th>
+            {cols.map(({ u2, v }) => {
+              //  {col: {row: coef(civ_1[row], civ_2[col]) for row in civ_1} for col in civ_2}
+              const c = color(v)
+              return (
+                <td key={`${u1.id}/${u2.id}`} style={c}>
+                  <a
+                    href={makeHash({
+                      c1: civ1,
+                      c2: civ2,
+                      a1: age1,
+                      a2: age2,
+                      m: '1v1',
+                      u1: u1.id,
+                      u2: u2.id,
+                    })}
+                  >
+                    {v.toFixed(6)}
+                  </a>
+                </td>
+              )
+            })}
+          </tr>
+        ))}
       </tbody>
     </table>
   )
