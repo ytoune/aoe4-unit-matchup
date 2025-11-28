@@ -9,43 +9,46 @@
     "node": ">= 22"
   },
   "volta": {
-    "node": "22.15.0",
-    "yarn": "4.9.1"
+    "node": "24.11.1",
+    "yarn": "4.12.0"
   },
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.12.0",
   "private": true,
   "scripts": {
     "build": "rimraf dist && vite build",
     "dev": "vite",
     "push-page": "gh-pages -d dist",
-    "test": "eslint \"**/*.{ts,tsx}\" && tsc --noEmit && vitest run --passWithNoTests",
-    "ts-node": "node -r esbuild-register"
+    "test": "eslint && tsc --noEmit && vitest run --passWithNoTests",
+    "ts-node": "tsx"
   },
   "devDependencies": {
-    "@eslint/js": "9.32.0",
+    "@eslint/compat": "2.0.0",
+    "@eslint/js": "9.39.1",
     "@preact/preset-vite": "2.10.2",
     "@types/chroma-js": "3.1.1",
     "@types/gh-pages": "6.1.0",
-    "@types/node": "24.1.0",
-    "@typescript-eslint/eslint-plugin": "8.38.0",
-    "@typescript-eslint/parser": "8.38.0",
+    "@types/node": "24.10.1",
+    "@typescript-eslint/eslint-plugin": "8.48.0",
+    "@typescript-eslint/parser": "8.48.0",
     "aoe4data": "git+https://github.com/aoe4world/data.git#main",
     "chroma-js": "3.1.2",
-    "esbuild": "0.25.8",
+    "esbuild": "0.27.0",
     "esbuild-register": "3.6.0",
-    "eslint": "9.32.0",
+    "eslint": "9.39.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-github": "6.0.0",
+    "eslint-plugin-import": "2.32.0",
     "gh-pages": "6.3.0",
-    "globals": "16.3.0",
+    "globals": "16.5.0",
     "preact": "10.26.9",
-    "prettier": "3.6.2",
-    "rimraf": "6.0.1",
-    "typescript": "5.8.3",
-    "vite": "7.0.6",
+    "prettier": "3.7.1",
+    "rimraf": "6.1.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "7.2.4",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "3.2.4"
+    "vitest": "4.0.14"
   },
   "prettier": {
     "useTabs": false,

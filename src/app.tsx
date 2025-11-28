@@ -1,9 +1,9 @@
+import chroma from 'chroma-js'
 import { useEffect, useMemo, useReducer, useRef, useState } from 'preact/hooks'
 import type { JSX } from 'preact/jsx-runtime'
-import chroma from 'chroma-js'
-import { civsMap, civIds } from './civs'
-import type { UnitData } from './data'
+import { civIds, civsMap } from './civs'
 import { createLines } from './create-lines'
+import type { UnitData } from './data'
 import { coef, trade } from './matchup'
 
 type Mode = '1v1' | 'summary'
@@ -463,6 +463,7 @@ const Table = ({
   const list1 = makeList(data, civ1, age1)
   const list2 = makeList(data, civ2, age2)
   // chroma.brewer.RdYlGn
+  // eslint-disable-next-line import/no-named-as-default-member
   const scale = useMemo(() => chroma.scale('RdYlGn'), [])
   let min = 1 / 0
   let max = -1 / 0

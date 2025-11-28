@@ -111,6 +111,7 @@ export type Line = Readonly<{
   numberOfAttacks: number
 }>
 
+// eslint-disable-next-line complexity
 export const createLines = function* (unit: UnitData): Iterable<Line> {
   //             name = unit.get("name", "")
   const name = unit.name

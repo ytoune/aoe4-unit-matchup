@@ -34,7 +34,14 @@
   },
   "eslint.enable": true,
   "eslint.nodePath": "node_modules",
-  "eslint.workingDirectories": ["*"],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.useESLintClass": true,
+  "eslint.useFlatConfig": true,
+  "eslint.trace.server": "messages",
+  "eslint.lintTask.enable": true,
+  "eslint.problems.shortenToSingleLine": false,
+  "task.allowAutomaticTasks": "on",
   "editor.rulers": [80],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.words": ["civs", "coef"]
 }

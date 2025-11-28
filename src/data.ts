@@ -22,6 +22,7 @@ export const getData = async (): Promise<readonly UnitData[]> =>
         d => d.data as UnitData[],
         () => null,
       ),
+    // @ts-expect-error: ignore?
     import('./all-unified.json').then(d => d.default.data as UnitData[]),
   ])
     .then(([a, b]) => {
@@ -53,6 +54,7 @@ export const getData = async (): Promise<readonly UnitData[]> =>
               u.variations.every(v => !v.locale)
             ),
         )
+        // eslint-disable-next-line complexity
         .map((u, _, data) => {
           const id = u.id
           const costNum = u.variations.map(v => v.costs.total)
